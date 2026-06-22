@@ -99,6 +99,7 @@ for s in SEEDS:
     std_history = []
     ranking_diff_history = []
     best_reward = -np.inf
+    best_theta = theta.copy()
 
     for t in range(T):
 
@@ -185,10 +186,36 @@ for s in SEEDS:
             edges
         )
 
-        theta = optimizer.step(
-            theta,
-            g
-        )
+        candidate_steps = [
+            1.0,
+            0.5,
+            0.25,
+            0.125
+        ]
+
+        for alpha in candidate_steps:
+
+            theta_candidate = (
+                theta
+                -
+                lr * alpha * g
+            )
+
+            policy.set_parameters(
+                theta_candidate
+            )
+
+            reward = evaluator.evaluate_policy(
+                policy,
+                num_episodes=3
+            )
+
+            if reward > best_reward:
+
+                best_reward = reward
+                best_theta = theta_candidate
+
+        theta = best_theta
 
         ################################################
         # Evaluation
